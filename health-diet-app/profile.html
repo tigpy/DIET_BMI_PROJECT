@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Health & Diet App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #fffbea; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        .container { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 2rem 1.5rem; margin: 2rem auto; max-width: 500px; width: 100%; }
+        h1, h2 { color: #3a3a3a; text-align: center; }
+        .profile-info, .logs { margin-bottom: 1.5rem; }
+        .profile-info label { font-weight: 500; }
+        .profile-info input, .profile-info select { padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; margin-bottom: 0.5rem; width: 100%; }
+        .profile-info button { background: #f7c873; color: #3a3a3a; border: none; border-radius: 6px; padding: 0.5rem 1.2rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
+        .profile-info button:hover { background: #ffe0a3; }
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+        .log-table th, .log-table td { border: 1px solid #eee; padding: 0.4rem 0.6rem; text-align: left; }
+        .log-table th { background: #f7c873; color: #3a3a3a; }
+        .log-table td { background: #fffbea; }
+        .chart-container { margin: 2rem 0 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Profile</h1>
+        <div class="profile-info">
+            <form id="profileForm">
+                <label>Name</label>
+                <input type="text" id="profileName" required>
+                <label>Age</label>
+                <input type="number" id="profileAge" min="1" required>
+                <label>Gender</label>
+                <select id="profileGender" required>
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+                <button type="submit">Save Profile</button>
+            </form>
+            <div style="margin-top:1rem;">
+                <b>Latest BMI:</b> <span id="latestBMI">--</span>
+            </div>
+        </div>
+        <div class="logs">
+            <h2>Meal Log</h2>
+            <form id="mealLogForm" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <input type="date" id="mealDate" required style="flex:1;min-width:120px;">
+                <input type="text" id="mealText" placeholder="Meal description" required style="flex:2;min-width:120px;">
+                <button type="submit">Add Meal</button>
+            </form>
+            <table class="log-table" id="mealLogTable">
+                <thead><tr><th>Date</th><th>Meal</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <h2>Weight Log</h2>
+            <form id="weightLogForm" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <input type="date" id="weightDate" required style="flex:1;min-width:120px;">
+                <input type="number" id="weightValue" placeholder="Weight (kg)" min="10" max="500" required style="flex:1;min-width:100px;">
+                <button type="submit">Add Weight</button>
+            </form>
+            <table class="log-table" id="weightLogTable">
+                <thead><tr><th>Date</th><th>Weight (kg)</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="chart-container">
+            <h2>Progress Chart</h2>
+            <canvas id="progressChart" height="200"></canvas>
+        </div>
+        <div style="text-align:center; margin-top:1.5rem;">
+            <button onclick="window.location.href='index.html'" style="background:#f7c873; border:none; border-radius:6px; padding:0.7rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer;">Back to Home</button>
+        </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script>
+    let currentUser = null;
+    async function loadProfile() {
+        const debugDiv = document.createElement('div');
+        debugDiv.style = 'background:#fff3cd;color:#856404;padding:0.5rem;margin-bottom:1rem;border-radius:6px;font-size:0.95em;';
+        debugDiv.id = 'debugOutput';
+        document.querySelector('.container').prepend(debugDiv);
+        try {
+            const user = await apiGetProfile();
+            debugDiv.textContent = 'API Response: ' + JSON.stringify(user);
+            if (!user || user.msg) {
+                debugDiv.textContent += ' | Error: ' + (user ? user.msg : 'No user data');
+                alert('Please login first.');
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+            document.getElementById('profileName').value = user.name || '';
+            document.getElementById('profileAge').value = user.age || '';
+            document.getElementById('profileGender').value = user.gender || '';
+            document.getElementById('latestBMI').textContent = user.bmi || '--';
+            loadMealLog(user.mealLogs || []);
+            loadWeightLog(user.weightLogs || []);
+            drawChart(user.weightLogs || []);
+        } catch (err) {
+            debugDiv.textContent = 'Fetch error: ' + err;
+        }
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('profileName').value.trim();
+        const age = document.getElementById('profileAge').value;
+        const gender = document.getElementById('profileGender').value;
+        const res = await apiUpdateProfile({ name, age, gender });
+        if (res && !res.msg) {
+            alert('Profile updated!');
+            loadProfile();
+        } else {
+            alert('Update failed.');
+        }
+    });
+
+    document.getElementById('mealLogForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const date = document.getElementById('mealDate').value;
+        const meal = document.getElementById('mealText').value.trim();
+        if (!date || !meal) return;
+        const res = await apiAddMealLog({ date, meal });
+        if (res && !res.msg) {
+            loadProfile();
+            document.getElementById('mealLogForm').reset();
+        } else {
+            alert('Failed to add meal.');
+        }
+    });
+
+    document.getElementById('weightLogForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const date = document.getElementById('weightDate').value;
+        const weight = document.getElementById('weightValue').value;
+        if (!date || !weight) return;
+        const res = await apiAddWeightLog({ date, weight });
+        if (res && !res.msg) {
+            loadProfile();
+            document.getElementById('weightLogForm').reset();
+        } else {
+            alert('Failed to add weight.');
+        }
+    });
+
+    function loadMealLog(mealLog) {
+        const tbody = document.getElementById('mealLogTable').querySelector('tbody');
+        tbody.innerHTML = '';
+        mealLog.forEach(entry => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${entry.date}</td><td>${entry.meal}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function loadWeightLog(weightLog) {
+        const tbody = document.getElementById('weightLogTable').querySelector('tbody');
+        tbody.innerHTML = '';
+        weightLog.forEach(entry => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${entry.date}</td><td>${entry.weight}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function drawChart(weightLog) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        if (window.progressChart) window.progressChart.destroy();
+        const labels = weightLog.map(e => e.date);
+        const data = weightLog.map(e => e.weight);
+        window.progressChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: data,
+                    borderColor: '#f7c873',
+                    backgroundColor: 'rgba(247,200,115,0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: false } }
+            }
+        });
+    }
+
+    loadProfile();
+    </script>
+</body>
+</html>

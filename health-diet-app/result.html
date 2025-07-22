@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Result - Health & Diet App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: #fffbea;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 2rem 1.5rem;
+            margin: 2rem 0;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1, h2 {
+            color: #3a3a3a;
+            text-align: center;
+        }
+        .bmi-score {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #f7c873;
+            text-align: center;
+            margin: 1rem 0 0.5rem 0;
+        }
+        .bmi-category {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .tips {
+            background: #fffbea;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .videos {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        iframe {
+            border-radius: 10px;
+            width: 100%;
+            max-width: 350px;
+            height: 200px;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 1rem 0.5rem; }
+            iframe { max-width: 100%; height: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your BMI Result</h1>
+        <div class="bmi-score" id="bmiScore">--</div>
+        <div class="bmi-category" id="bmiCategory">--</div>
+        <div class="tips" id="tips"></div>
+        <h2>Recommended Exercise Videos</h2>
+        <div class="videos" id="videos"></div>
+        <div style="text-align:center; margin-top:2rem;">
+            <button onclick="window.location.href='index.html'" style="background:#f7c873; border:none; border-radius:6px; padding:0.7rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer;">Back to Home</button>
+        </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script>
+    async function loadBMIResult() {
+        let bmiScore = '--', category = '--';
+        let userData = null;
+        if (getToken()) {
+            userData = await apiGetProfile();
+            bmiScore = userData && userData.bmi ? userData.bmi : '--';
+        } else {
+            userData = JSON.parse(localStorage.getItem('bmiUserData'));
+            bmiScore = userData ? userData.bmi : '--';
+        }
+        // Classify BMI
+        if (bmiScore && bmiScore !== '--') {
+            const bmi = parseFloat(bmiScore);
+            if (bmi < 18.5) category = 'Underweight';
+            else if (bmi < 24.9) category = 'Normal weight';
+            else if (bmi < 29.9) category = 'Overweight';
+            else category = 'Obese';
+        }
+        document.getElementById('bmiScore').textContent = bmiScore;
+        document.getElementById('bmiCategory').textContent = category;
+
+        // Personalized tips based on BMI category
+        let tips = '';
+        let query = '';
+        switch(category) {
+            case 'Underweight':
+                tips = `<b>Diet:</b> Eat more frequent, nutrient-rich meals. Include healthy fats, lean proteins, and whole grains.<br><b>Exercise:</b> Focus on strength training and moderate cardio to build muscle mass.`;
+                query = 'healthy weight gain exercises';
+                break;
+            case 'Normal weight':
+                tips = `<b>Diet:</b> Maintain a balanced diet with fruits, vegetables, lean proteins, and whole grains.<br><b>Exercise:</b> Continue regular physical activity, mixing cardio and strength training.`;
+                query = 'full body workout for healthy adults';
+                break;
+            case 'Overweight':
+                tips = `<b>Diet:</b> Reduce processed foods and sugars. Focus on portion control and increase fiber intake.<br><b>Exercise:</b> Incorporate more cardio and strength training to burn fat and build muscle.`;
+                query = 'weight loss exercises for beginners';
+                break;
+            case 'Obese':
+                tips = `<b>Diet:</b> Consult a dietitian for a personalized plan. Emphasize vegetables, lean proteins, and reduce calorie intake.<br><b>Exercise:</b> Start with low-impact activities like walking or swimming, and gradually increase intensity.`;
+                query = 'low impact exercises for obese beginners';
+                break;
+            default:
+                tips = 'Eat a balanced diet and stay active!';
+                query = 'healthy lifestyle exercises';
+        }
+        document.getElementById('tips').innerHTML = tips;
+
+        // Fetch 3 YouTube videos using YouTube Data API
+        const apiKey = 'AIzaSyBp3uc0noW0q7Ipd0a8EvQFI8OitTu6_rA';
+        const maxResults = 3;
+        const videosDiv = document.getElementById('videos');
+        fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${apiKey}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const videoId = item.id.videoId;
+                        const iframe = document.createElement('iframe');
+                        iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                        iframe.allowFullscreen = true;
+                        videosDiv.appendChild(iframe);
+                    });
+                } else {
+                    videosDiv.innerHTML = '<p>No videos found.</p>';
+                }
+            })
+            .catch(() => {
+                videosDiv.innerHTML = '<p>Unable to load videos at this time.</p>';
+            });
+    }
+    loadBMIResult();
+    </script>
+</body>
+</html>

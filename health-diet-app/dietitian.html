@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dietitian Chatbot - Health & Diet App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: #fffbea;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chat-container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 2rem 1.5rem 1rem 1.5rem;
+            margin: 2rem 0;
+            max-width: 400px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+        }
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+        .bubble {
+            max-width: 80%;
+            padding: 0.7rem 1rem;
+            border-radius: 16px;
+            font-size: 1rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .user {
+            align-self: flex-end;
+            background: #f7c873;
+            color: #3a3a3a;
+        }
+        .bot {
+            align-self: flex-start;
+            background: #e6f7e6;
+            color: #2d6a2d;
+        }
+        .chat-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 0.6rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        .chat-input button {
+            background: #f7c873;
+            color: #3a3a3a;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-input button:hover {
+            background: #ffe0a3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2 style="text-align:center; color:#3a3a3a;">Dietitian Chatbot</h2>
+        <div class="chat-history" id="chatHistory"></div>
+        <form class="chat-input" id="chatForm" autocomplete="off">
+            <input type="text" id="userInput" placeholder="Ask about diet or exercise..." required />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script src="js/chatbot.js"></script>
+</body>
+</html>
