@@ -1,0 +1,82 @@
+/* Glassmorphism Navbar Styles */
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+.navbar-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+}
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #3a3a3a;
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 1.2rem;
+  margin: 0;
+  padding: 0;
+}
+.navbar-links a {
+  color: #3a3a3a;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.navbar-links a.active, .navbar-links a:hover {
+  background: rgba(247,200,115,0.25);
+  color: #f7c873;
+}
+
+/* Responsive Navbar */
+@media (max-width: 700px) {
+  .navbar-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.5rem 0.7rem;
+  }
+  .navbar-links {
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+}
+
+/* Footer Styles */
+.footer {
+  width: 100%;
+  background: rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+  padding: 1rem 0;
+  margin-top: 2rem;
+  text-align: center;
+}
+.footer-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  color: #3a3a3a;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.footer-content a {
+  color: #f7c873;
+  text-decoration: underline;
+}

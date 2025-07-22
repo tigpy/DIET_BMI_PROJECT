@@ -1,3 +1,8 @@
+import express from 'express';
+import auth from '../middleware/auth.js';
+
+const router = express.Router();
+
 // Protected POST /api/user/weights - Add a weight log
 router.post('/weights', auth, async (req, res) => {
   const { date, weight } = req.body;
@@ -61,10 +66,6 @@ router.post('/bmi', auth, async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 });
-import express from 'express';
-import auth from '../middleware/auth.js';
-
-const router = express.Router();
 
 // Protected GET /api/user/profile
 router.get('/profile', auth, async (req, res) => {
